@@ -8,8 +8,11 @@ using System.Windows;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Threading;
+using System.Threading.Tasks;
 using System.Collections.Generic;
 using System.Linq;
+using System.Diagnostics;
+using System.Threading.Tasks;
 
 namespace BeatSequencer.ViewModels;
 
@@ -236,10 +239,23 @@ public class MainViewModel : ViewModelBase, IDisposable
         ClearCommand = new RelayCommand(_ => ClearPattern());
         SavePatternToFileCommand = new RelayCommand(_ => SavePatternToFile());
         LoadPatternFromFileCommand = new RelayCommand(_ => LoadPatternFromFile());
-     
-
-
     }
+
+    public bool BankA_Filled => _patternBanks.ContainsKey('A');
+    public bool BankB_Filled => _patternBanks.ContainsKey('B');
+    public bool BankC_Filled => _patternBanks.ContainsKey('C');
+    public bool BankD_Filled => _patternBanks.ContainsKey('D');
+
+    private void NotifyBankStateChanged()
+    {
+        OnPropertyChanged(nameof(BankA_Filled));
+        OnPropertyChanged(nameof(BankB_Filled));
+        OnPropertyChanged(nameof(BankC_Filled));
+        OnPropertyChanged(nameof(BankD_Filled));
+    }
+
+
+
 
     public double Bpm
     {
@@ -388,6 +404,7 @@ private void InitializeSamplesAndTracks()
     {
         CurrentStepIndex = stepIndex;
 
+        // Highlight current step
         foreach (var trackVm in Tracks)
         {
             foreach (var stepVm in trackVm.Steps)
@@ -398,17 +415,23 @@ private void InitializeSamplesAndTracks()
 
         if (stepIndex < 0) return;
 
-        // Trigger audio
+        // Trigger audio (with humanized timing + waveform pulse)
         foreach (var tvm in Tracks)
         {
             var model = tvm.Model;
+
             if (stepIndex >= 0 && stepIndex < model.Steps.Length && model.Steps[stepIndex])
             {
                 var vel = model.Velocities[stepIndex];
-                _audioEngine.PlaySample(model.SamplePath, model.Volume, model.Pan, vel);
+                var stepVm = tvm.Steps[stepIndex];
+                double jitterMs = stepVm.TimingOffsetMs;
+
+                // Fire-and-forget, don’t block UI
+                _ = TriggerHitAsync(tvm, jitterMs, vel);
             }
         }
     }
+
 
     private void Start()
     {
@@ -445,19 +468,77 @@ private void InitializeSamplesAndTracks()
         }
     }
 
+    private async Task TriggerHitAsync(TrackViewModel trackVm, double timingOffsetMs, float velocity)
+    {
+        var model = trackVm.Model;
+
+        if (timingOffsetMs > 0)
+        {
+            await Task.Delay((int)Math.Round(timingOffsetMs));
+        }
+
+        trackVm.IsRecentlyTriggered = true;
+
+        // start audio
+        _audioEngine.PlaySample(model.SamplePath, model.Volume, model.Pan, velocity);
+
+        // animate playhead along waveform
+        await AnimateWaveformPlayheadAsync(trackVm, 200); // 200ms feels snappy; adjust if you like
+
+        trackVm.IsRecentlyTriggered = false;
+        trackVm.UpdatePlayhead(0.0);
+    }
+
+    private async Task AnimateWaveformPlayheadAsync(TrackViewModel trackVm, int durationMs)
+    {
+        if (durationMs <= 0)
+        {
+            trackVm.UpdatePlayhead(1.0);
+            return;
+        }
+
+        var sw = Stopwatch.StartNew();
+
+        while (sw.ElapsedMilliseconds < durationMs)
+        {
+            double progress = sw.ElapsedMilliseconds / (double)durationMs;
+            trackVm.UpdatePlayhead(progress);
+            await Task.Delay(16); // ~60 FPS
+        }
+
+        trackVm.UpdatePlayhead(1.0);
+    }
+
+
+
+
     public void HumanizePattern()
     {
         // here we'll just randomize velocities slightly; timing is already "swung".
         var rng = new Random();
+
+        const double maxVelocityJitter = 0.2;
+        const double maxTimingJitterMs = 12;
+
         foreach (var tvm in Tracks)
         {
-            foreach (var step in tvm.Steps.Where(s => s.IsActive))
+            foreach (var step in tvm.Steps)
             {
-                var delta = (rng.NextDouble() - 0.5) * 0.2; // +/-0.1
+                if (!step.IsActive)
+                {
+                    step.TimingOffsetMs = 0;
+                    continue;
+                }
+
+                var delta = (rng.NextDouble() - 0.5) *maxVelocityJitter; // +/-0.1
                 step.Velocity = Math.Clamp(step.Velocity + delta, 0.4, 1.0);
+
+                step.TimingOffsetMs = rng.NextDouble() * maxTimingJitterMs;
             }
         }
     }
+
+
 
     public void ClearPattern()
     {
@@ -467,6 +548,7 @@ private void InitializeSamplesAndTracks()
             {
                 s.IsActive = false;
                 s.Velocity = 1.0;
+                s.TimingOffsetMs = 0;
             }
         }
     }
@@ -526,11 +608,32 @@ private void InitializeSamplesAndTracks()
         }
     }
 
+    public void ClearBank(char bank)
+    {
+        bank = char.ToUpperInvariant(bank);
+        if (bank is < 'A' or > 'D') return;
+
+        if (_patternBanks.ContainsKey(bank))
+        {
+            _patternBanks.Remove(bank);
+            NotifyBankStateChanged();
+        }
+    }
+
+    public void ClearAllBanks()
+    {
+        _patternBanks.Clear();
+        NotifyBankStateChanged();
+    }
+
+
+
     public void StorePatternToBank(char bank)
     {
         bank = char.ToUpperInvariant(bank);
         if (bank is < 'A' or > 'D') return;
         _patternBanks[bank] = CapturePatternSnapshot();
+        NotifyBankStateChanged();
     }
 
     public void RecallPatternFromBank(char bank)
