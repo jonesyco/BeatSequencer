@@ -85,7 +85,3 @@ Using the CLI
 
 ---
 
-## License
-Add a license file to the repository (e.g., `LICENSE`). This project currently does not include a license file — choose a license that fits your needs (MIT is common for small apps).
-
----
