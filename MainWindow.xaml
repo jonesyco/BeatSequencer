@@ -10,7 +10,7 @@
 
     <Window.Resources>
         <!-- Colors -->
-        <SolidColorBrush x:Key="BackgroundBrush" Color="#101020" />
+        <!--<SolidColorBrush x:Key="BackgroundBrush" Color="#101020" />
         <SolidColorBrush x:Key="PanelBrush" Color="#17192A" />
         <SolidColorBrush x:Key="AccentBrush" Color="#5C7CFA" />
         <SolidColorBrush x:Key="AccentSoftBrush" Color="#3D4FD3" />
@@ -19,6 +19,20 @@
         <SolidColorBrush x:Key="SubtleTextBrush" Color="#A0A4C0" />
         <SolidColorBrush x:Key="StepOffBrush" Color="#25273C" />
         <SolidColorBrush x:Key="StepOnBrush" Color="#5C7CFA" />
+        <SolidColorBrush x:Key="StepCurrentBorderBrush" Color="#FFD86B" />-->
+
+
+        <SolidColorBrush x:Key="BackgroundBrush" Color="#070816" />
+        <SolidColorBrush x:Key="PanelBrush" Color="#101326" />
+        <SolidColorBrush x:Key="AccentBrush" Color="#5C7CFA" />
+        <SolidColorBrush x:Key="AccentSoftBrush" Color="#3A47C6" />
+        <SolidColorBrush x:Key="AccentDangerBrush" Color="#FF5C7C" />
+        <SolidColorBrush x:Key="AccentSuccessBrush" Color="#43D17A" />
+        <SolidColorBrush x:Key="TextBrush" Color="#F7F7FF" />
+        <SolidColorBrush x:Key="SubtleTextBrush" Color="#8C90B0" />
+        <SolidColorBrush x:Key="StepOffBrush" Color="#1D2035" />
+        <SolidColorBrush x:Key="StepOnBrush" Color="#5C7CFA" />
+        <SolidColorBrush x:Key="StepOnAltBrush" Color="#FFB74D" />
         <SolidColorBrush x:Key="StepCurrentBorderBrush" Color="#FFD86B" />
 
         <!-- Global Button style -->
@@ -47,6 +61,32 @@
                             </Trigger>
                             <Trigger Property="IsEnabled" Value="False">
                                 <Setter TargetName="border" Property="Opacity" Value="0.4" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style x:Key="SquareBankButtonStyle" TargetType="Button" BasedOn="{StaticResource {x:Type Button}}">
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="border"
+                Background="{TemplateBinding Background}"
+                BorderBrush="{TemplateBinding BorderBrush}"
+                BorderThickness="{TemplateBinding BorderThickness}"
+                CornerRadius="0"     
+                            Padding="{TemplateBinding Padding}">
+                            <ContentPresenter HorizontalAlignment="Center"
+                              VerticalAlignment="Center" />
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="border" Property="Background" Value="{StaticResource AccentBrush}"/>
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter TargetName="border" Property="Background" Value="{StaticResource AccentSoftBrush}"/>
                             </Trigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
@@ -101,6 +141,35 @@
             </Style.Triggers>
         </Style>
 
+        <!-- Waveform border style with pulse animation on hit -->
+        <Style x:Key="WaveformBorderStyle" TargetType="Border">
+            <Setter Property="Height" Value="30" />
+            <Setter Property="Width" Value="180" />
+            <Setter Property="CornerRadius" Value="6" />
+            <Setter Property="Padding" Value="2" />
+            <Setter Property="Background" Value="#202234" />
+            <Setter Property="BorderBrush" Value="#303553" />
+            <Setter Property="BorderThickness" Value="1" />
+        </Style>
+
+
+        <Style x:Key="WaveformDotStyle" TargetType="Ellipse">
+            <Setter Property="Width" Value="6" />
+            <Setter Property="Height" Value="6" />
+            <Setter Property="Fill" Value="#43D17A" />
+            <Setter Property="Stroke" Value="Black" />
+            <Setter Property="StrokeThickness" Value="0.5" />
+            <Setter Property="Opacity" Value="0" />
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding IsRecentlyTriggered}" Value="True">
+                    <Setter Property="Opacity" Value="1" />
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
+
+
+
+
     </Window.Resources>
 
     <Grid Background="{StaticResource BackgroundBrush}">
@@ -119,11 +188,11 @@
                 <StackPanel DockPanel.Dock="Left"
                             Orientation="Vertical"
                             Margin="0,0,20,0">
-                    <TextBlock Text="Beat Sequencer"
+                    <TextBlock Text="Sound SEQ"
                                Foreground="{StaticResource TextBrush}"
                                FontSize="20"
                                FontWeight="Bold" />
-                    <TextBlock Text="16-step drum machine"
+                    <TextBlock Text="multi-step drum machine"
                                Foreground="{StaticResource SubtleTextBrush}"
                                FontSize="12" />
                 </StackPanel>
@@ -139,18 +208,13 @@
               SelectedItem="{Binding StepCount, Mode=TwoWay}" />
                 </StackPanel>
 
-                
+
                 <StackPanel Orientation="Horizontal"
                             VerticalAlignment="Center">
 
                     <!-- Play / Stop -->
-                    <Button Content="Play"
-                            Width="70"
-                            Command="{Binding PlayCommand}" />
-                    <Button Content="Stop"
-                            Width="70"
-                            Background="{StaticResource AccentDangerBrush}"
-                            Command="{Binding StopCommand}" />
+                    <Button Style="{StaticResource SquareBankButtonStyle}" Height="24" Content="Play" Width="70" Command="{Binding PlayCommand}" />
+                    <Button Style="{StaticResource SquareBankButtonStyle}" Height="24" Content="Stop" Width="70" Background="{StaticResource AccentDangerBrush}" Command="{Binding StopCommand}" />
 
                     <!-- BPM -->
                     <StackPanel Orientation="Horizontal"
@@ -195,44 +259,177 @@
                                 Value="{Binding Swing, Mode=TwoWay}" />
                     </StackPanel>
 
-                    <!-- Export -->
-                    <Button Content="Export WAV"
-                            Width="100"
-                            Margin="15,0,0,0"
-                            Click="ExportWav_Click" />
+                   
 
                     <!-- Pattern tools -->
                     <StackPanel Orientation="Horizontal"
                                 Margin="20,0,0,0"
                                 VerticalAlignment="Center">
-                        <Button Content="Randomize" Command="{Binding RandomizeCommand}" />
-                        <Button Content="Humanize" Command="{Binding HumanizeCommand}" />
-                        <Button Content="Clear" Command="{Binding ClearCommand}" />
+                        <Button Style="{StaticResource SquareBankButtonStyle}" Content="Randomize" Command="{Binding RandomizeCommand}" />
+                        <Button Style="{StaticResource SquareBankButtonStyle}" Content="Humanize" Command="{Binding HumanizeCommand}" />
+                        <Button Style="{StaticResource SquareBankButtonStyle}" Content="Clear" Command="{Binding ClearCommand}" />
                     </StackPanel>
 
                     <!-- Pattern banks -->
-                    <StackPanel Orientation="Horizontal"
-                                Margin="10,0,0,0"
-                                VerticalAlignment="Center">
-                        <TextBlock Text="Banks:"
-                                   Foreground="{StaticResource SubtleTextBrush}"
-                                   VerticalAlignment="Center"
-                                   Margin="0,0,5,0" />
-                        <Button Content="A" Click="BankStoreA_Click" />
-                        <Button Content="B" Click="BankStoreB_Click" />
-                        <Button Content="C" Click="BankStoreC_Click" />
-                        <Button Content="D" Click="BankStoreD_Click" />
-                        <Button Content="Recall A" Click="BankRecallA_Click" />
-                        <Button Content="Recall B" Click="BankRecallB_Click" />
-                        <Button Content="Recall C" Click="BankRecallC_Click" />
-                        <Button Content="Recall D" Click="BankRecallD_Click" />
+                    <!-- Compact pattern banks -->
+                    <StackPanel Orientation="Vertical"
+            Margin="15,0,0,0"
+            VerticalAlignment="Center">
+                        <!--<TextBlock Text="Banks"
+               Foreground="{StaticResource SubtleTextBrush}"
+               HorizontalAlignment="Left"
+               Margin="0,0,0,3" />-->
+
+                        <UniformGrid Rows="1" Columns="4">
+                            <!-- Bank A -->
+                            <StackPanel Orientation="Vertical" Margin="2,0">
+                                <!-- Main bank button (store) -->
+                                <Button Style="{StaticResource SquareBankButtonStyle}"
+                                        Content="A"
+                                        Width="50"
+                                        Height="24"
+                                        Padding="0"
+                                        Margin="0"
+                                        Click="BankStoreA_Click"
+                                        Background="{Binding BankA_Filled, Converter={StaticResource BoolToBankBrushConverter}}" />
+                                <!-- Tiny Recall / Clear row -->
+                                <StackPanel Orientation="Horizontal"
+                                        HorizontalAlignment="Center"
+                                        Margin="0,0,0,0">
+                                    <Button Style="{StaticResource SquareBankButtonStyle}"
+                                            Content="R"
+                                            Width="25"
+                                            Height="18"
+                                            FontSize="10"
+                                            Padding="0"
+                                            Margin="0"
+                                            Click="BankRecallA_Click" />
+                                    <Button Style="{StaticResource SquareBankButtonStyle}"
+                                            Content="X"
+                                            Width="25"
+                                            Height="18"
+                                            FontSize="10"
+                                            Padding="0"
+                                            Margin="0"
+                                            Click="BankClearA_Click" />
+                                </StackPanel>
+                            </StackPanel>
+
+                            <!-- Bank B -->
+                            <StackPanel Orientation="Vertical" Margin="0,0">
+                                <Button Style="{StaticResource SquareBankButtonStyle}"
+                                        Content="B"
+                                        Width="50"
+                                        Height="24"
+                                        Padding="0"
+                                        Margin="0"
+                                        Click="BankStoreB_Click"
+                                        Background="{Binding BankB_Filled, Converter={StaticResource BoolToBankBrushConverter}}" />
+                                <StackPanel Orientation="Horizontal"
+                                    HorizontalAlignment="Center"
+                                    Margin="0,0,0,0">
+                                    <Button Style="{StaticResource SquareBankButtonStyle}" 
+                                            Content="R"
+                                            Width="25"
+                                            Height="18"
+                                            FontSize="10"
+                                            Padding="0"
+                                            Margin="0"
+                                            Click="BankRecallB_Click" />
+                                    <Button Style="{StaticResource SquareBankButtonStyle}" 
+                                            Content="X"
+                                            Width="25"
+                                            Height="18"
+                                            FontSize="10"
+                                            Padding="0"
+                                            Margin="0"
+                                            Click="BankClearB_Click" />
+                                </StackPanel>
+                            </StackPanel>
+
+                            <!-- Bank C -->
+                            <StackPanel Orientation="Vertical" Margin="0,0">
+                                <Button Style="{StaticResource SquareBankButtonStyle}"
+                                        Content="C"
+                                        Width="50"
+                                        Height="24"
+                                        Padding="0"
+                                        Margin="0"
+                                        Click="BankStoreC_Click"
+                                        Background="{Binding BankC_Filled, Converter={StaticResource BoolToBankBrushConverter}}" />
+                                <StackPanel Orientation="Horizontal"
+                                            HorizontalAlignment="Center"
+                                             Margin="0,0,0,0">
+                                    <Button Style="{StaticResource SquareBankButtonStyle}"
+                                            Content="R"
+                                            Width="25"
+                                            Height="18"
+                                            FontSize="10"
+                                            Padding="0"
+                                            Margin="0"
+                                            Click="BankRecallC_Click" />
+                                    <Button Style="{StaticResource SquareBankButtonStyle}"
+                                            Content="X"
+                                            Width="25"
+                                            Height="18"
+                                            FontSize="10"
+                                            Padding="0"
+                                            Margin="0"
+                                            Click="BankClearC_Click" />
+                                </StackPanel>
+                            </StackPanel>
+
+                            <!-- Bank D -->
+                            <StackPanel Orientation="Vertical" Margin="0,0">
+                                <Button Style="{StaticResource SquareBankButtonStyle}"
+                                        Content="D"
+                                        Width="50"
+                                        Height="24"
+                                        Padding="0"
+                                        Margin="0"
+                                        Click="BankStoreD_Click"
+                                        Background="{Binding BankD_Filled, Converter={StaticResource BoolToBankBrushConverter}}" />
+                                <StackPanel Orientation="Horizontal"
+                        HorizontalAlignment="Center"
+                        Margin="0,0,0,0">
+                                    <Button Style="{StaticResource SquareBankButtonStyle}"
+                                            Content="R"
+                                            Width="25"
+                                            Height="18"
+                                            FontSize="10"
+                                            Padding="0"
+                                            Margin="0"
+                                            Click="BankRecallD_Click" />
+                                    <Button Style="{StaticResource SquareBankButtonStyle}"
+                                            Content="X"
+                                            Width="25"
+                                            Height="18"
+                                            FontSize="10"
+                                            Padding="0"
+                                            Margin="0"
+                                            Click="BankClearD_Click" />
+                                </StackPanel>
+                            </StackPanel>
+                        </UniformGrid>
                     </StackPanel>
 
-                    <!-- Save/Load pattern -->
-                    <StackPanel Orientation="Horizontal"
+                
+
+                    <!-- Save/Load/Export pattern -->
+                    <StackPanel Orientation="Horizontal"                                
                                 Margin="10,0,0,0">
-                        <Button Content="Save" Command="{Binding SavePatternToFileCommand}" />
-                        <Button Content="Load" Command="{Binding LoadPatternFromFileCommand}" />
+                        <Button Height="24" 
+                                Style="{StaticResource SquareBankButtonStyle}" 
+                                Content="Save" 
+                                Command="{Binding SavePatternToFileCommand}" />
+                        <Button Height="24" 
+                                Style="{StaticResource SquareBankButtonStyle}" 
+                                Content="Load" 
+                                Command="{Binding LoadPatternFromFileCommand}" />
+                        <Button Height="24" 
+                                Style="{StaticResource SquareBankButtonStyle}" 
+                                Content="Export WAV"  
+                                Click="ExportWav_Click" />
                     </StackPanel>
 
                 </StackPanel>
@@ -268,17 +465,25 @@
                                               Margin="0,3,0,3" />
 
                                     <!-- Waveform preview -->
-                                    <Border Height="30"
-                                            Width="180"
-                                            Background="#202234"
-                                            CornerRadius="4"
-                                            Padding="2">
-                                        <Grid>
+                                    <Border Style="{StaticResource WaveformBorderStyle}">
+                                        <Canvas>
+                                            <!-- waveform line -->
                                             <Polyline Points="{Binding WaveformPoints}"
-                                                      Stroke="#4C537A"
-                                                      StrokeThickness="1" />
-                                        </Grid>
+                                                Stroke="#4C537A"
+                                                StrokeThickness="1" />
+
+                                            <!-- playhead dot -->
+                                            <Ellipse Style="{StaticResource WaveformDotStyle}">
+                                                <Ellipse.RenderTransform>
+                                                    <TranslateTransform
+                                                     X="{Binding PlayheadPoint.X}"
+                                                     Y="{Binding PlayheadPoint.Y}" />
+                                                </Ellipse.RenderTransform>
+                                            </Ellipse>
+                                        </Canvas>
                                     </Border>
+
+
 
                                     <!-- Volume / Pan -->
                                     <StackPanel Orientation="Horizontal"
@@ -304,8 +509,7 @@
                                 </StackPanel>
 
                                 <!-- Right: Step pads -->
-                                <ItemsControl Grid.Column="1"
-                                              ItemsSource="{Binding Steps}">
+                                <ItemsControl Grid.Column="1" ItemsSource="{Binding Steps}">
                                     <ItemsControl.ItemsPanel>
                                         <ItemsPanelTemplate>
                                             <UniformGrid Rows="1" />
@@ -314,12 +518,16 @@
                                     <ItemsControl.ItemTemplate>
                                         <DataTemplate>
                                             <ToggleButton Style="{StaticResource StepToggleStyle}"
-                                                          IsChecked="{Binding IsActive, Mode=TwoWay}"
-                                                          PreviewMouseWheel="StepVelocity_MouseWheel">
-                                            </ToggleButton>
+              IsChecked="{Binding IsActive, Mode=TwoWay}"
+              PreviewMouseLeftButtonDown="StepButton_PreviewMouseLeftButtonDown"
+              PreviewMouseMove="StepButton_PreviewMouseMove"
+              PreviewMouseLeftButtonUp="StepButton_PreviewMouseLeftButtonUp" />
+
+
                                         </DataTemplate>
                                     </ItemsControl.ItemTemplate>
                                 </ItemsControl>
+
                             </Grid>
                         </DataTemplate>
                     </ItemsControl.ItemTemplate>

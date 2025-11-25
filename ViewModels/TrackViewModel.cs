@@ -1,7 +1,5 @@
-﻿using System;
-using System.Collections.ObjectModel;
+﻿using System.Collections.ObjectModel;
 using System.IO;
-using System.Linq;
 using System.Windows;
 using System.Windows.Media;
 using BeatSequencer.Models;
@@ -17,6 +15,45 @@ public class TrackViewModel : ViewModelBase
     private double _pan;
     private string _selectedSampleName;
     private PointCollection _waveformPoints = new();
+    private bool _isRecentlyTriggered;
+
+    public bool IsRecentlyTriggered
+    {
+        get => _isRecentlyTriggered;
+        set => SetProperty(ref _isRecentlyTriggered, value);
+    }
+
+    private Point _playheadPoint;
+    public Point PlayheadPoint
+    {
+        get => _playheadPoint;
+        set => SetProperty(ref _playheadPoint, value);
+    }
+
+    public void UpdatePlayhead(double progress)
+    {
+        if (WaveformPoints == null || WaveformPoints.Count == 0)
+        {
+            PlayheadPoint = new Point(0, 0);
+            return;
+        }
+
+        progress = Math.Clamp(progress, 0.0, 1.0);
+
+        double index = progress * (WaveformPoints.Count - 1);
+        int i0 = (int)Math.Floor(index);
+        int i1 = Math.Min(i0 + 1, WaveformPoints.Count - 1);
+        double frac = index - i0;
+
+        var p0 = WaveformPoints[i0];
+        var p1 = WaveformPoints[i1];
+
+        double x = p0.X + (p1.X - p0.X) * frac;
+        double y = p0.Y + (p1.Y - p0.Y) * frac;
+
+        PlayheadPoint = new Point(x, y);
+    }
+
 
     public string Name
     {
@@ -153,14 +190,9 @@ public class TrackViewModel : ViewModelBase
 
     private void UpdateWaveformPreview(string path)
     {
-        if (_waveformGenerator != null && !string.IsNullOrWhiteSpace(path))
-        {
-            WaveformPoints = _waveformGenerator(path);
-        }
-        else
-        {
-            WaveformPoints = new System.Windows.Media.PointCollection();
-        }
+        WaveformPoints = _waveformGenerator(path);
+        UpdatePlayhead(0.0);
     }
+
 
 }

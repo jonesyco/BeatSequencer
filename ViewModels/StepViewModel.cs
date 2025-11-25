@@ -8,6 +8,7 @@ public class StepViewModel : ViewModelBase
     private bool _isActive;
     private bool _isCurrent;
     private double _velocity; // 0..1
+    private double _timingOffsetMs;
 
     public int Index { get; }
 
@@ -30,10 +31,17 @@ public class StepViewModel : ViewModelBase
         set => SetProperty(ref _velocity, Math.Clamp(value, 0.0, 1.0));
     }
 
+    public double TimingOffsetMs
+    {
+        get => _timingOffsetMs;
+        set => SetProperty(ref _timingOffsetMs, value);
+    }
+
     public StepViewModel(int index, bool initialActive = false, double initialVelocity = 1.0)
     {
         Index = index;
         _isActive = initialActive;
         _velocity = initialVelocity;
+        _timingOffsetMs = 0;
     }
 }
