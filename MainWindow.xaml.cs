@@ -1,17 +1,19 @@
-﻿using System;
-using System.Windows;
+﻿using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using BeatSequencer.ViewModels;
 using Microsoft.Win32;
 using System.Windows.Controls.Primitives; // for ToggleButton
-using BeatSequencer.ViewModels;
+using BeatSequencer.Synth;
+using BeatSequencer.Integration;
 
 
 namespace BeatSequencer;
 
-public partial class MainWindow : Window
+public partial class MainWindow : Window, ISynthSampleListener
 {
+    private SynthesizerControl? _synthControl;
+    private UserControl? _sequencerControl;
     private readonly MainViewModel _viewModel;
 
     private bool _isDraggingSteps;
@@ -20,9 +22,40 @@ public partial class MainWindow : Window
     public MainWindow()
     {
         InitializeComponent();
+
+        ShowSequencer();
+        ModeToggle.IsChecked = false;
         _viewModel = new MainViewModel();
         DataContext = _viewModel;
     }
+
+    public void OnSynthSampleRecorded(SynthSampleMetadata metadata)
+    {
+        // TODO: Wire this into your real sample library / sequencer VM.
+
+        // Example: simple debug/logging so you can see it's firing
+        System.Diagnostics.Debug.WriteLine(
+            $"Synth sample recorded: {metadata.Name}, " +
+            $"Path={metadata.FilePath}, " +
+            $"Duration={metadata.Duration}, " +
+            $"SampleRate={metadata.SampleRate}, " +
+            $"Channels={metadata.Channels}");
+
+        // Example pseudo-code – replace with your real hooks:
+
+        // SampleLibrary.AddSample(
+        //     path: metadata.FilePath,
+        //     displayName: metadata.Name,
+        //     sampleRate: metadata.SampleRate,
+        //     channels: metadata.Channels,
+        //     duration: metadata.Duration);
+
+        // SequencerViewModel.RefreshSamples(); // so UI shows new sample
+
+        // Or, if each sample becomes its own instrument row:
+        // SequencerViewModel.AddInstrumentRowFromSample(metadata);
+    }
+
 
     protected override void OnClosed(EventArgs e)
     {
@@ -30,6 +63,59 @@ public partial class MainWindow : Window
         _viewModel.Dispose();
         Application.Current.Shutdown();
     }
+
+    private void ShowSequencer()
+    {
+        if (_sequencerControl == null)
+        {
+            // TODO: replace with your actual sequencer control constructor
+            // _sequencerControl = new SequencerControl(...);
+            _sequencerControl = new UserControl(); // placeholder if needed
+        }
+
+        MainContent.Content = _sequencerControl;
+
+        // Make sure toggle reflects state
+        if (ModeToggle != null)
+            ModeToggle.IsChecked = false;
+    }
+
+    private void ShowSynth()
+    {
+        if (_synthControl == null)
+        {
+            _synthControl = new SynthesizerControl(this);
+        }
+
+        MainContent.Content = _synthControl;
+
+        //if (ModeToggle != null)
+            ModeToggle.IsChecked = true;
+    }
+
+    private void SequencerButton_Click(object sender, RoutedEventArgs e)
+    {
+        ShowSequencer();
+    }
+
+    private void SynthesizerButton_Click(object sender, RoutedEventArgs e)
+    {
+        ShowSynth();
+    }
+
+
+    private void ModeToggle_Checked(object sender, RoutedEventArgs e)
+    {
+        // Checked = Synth
+        ShowSynth();
+    }
+
+    private void ModeToggle_Unchecked(object sender, RoutedEventArgs e)
+    {
+        // Unchecked = Sequencer
+        ShowSequencer();
+    }
+
 
     private void ExportWav_Click(object sender, RoutedEventArgs e)
     {

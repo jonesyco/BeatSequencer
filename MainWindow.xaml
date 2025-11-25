@@ -188,14 +188,83 @@
                 <StackPanel DockPanel.Dock="Left"
                             Orientation="Vertical"
                             Margin="0,0,20,0">
-                    <TextBlock Text="BeatSequencer"
-                               Foreground="{StaticResource TextBrush}"
-                               FontSize="20"
-                               FontWeight="Bold" />
+                    <StackPanel Orientation="Horizontal"
+            VerticalAlignment="Center"
+            Margin="8,0,0,0">
+                        <TextBlock Text="BeatSequencer"
+               FontSize="20"
+               Foreground="#F5F5FF"
+               VerticalAlignment="Center"/>
+
+                        <ToggleButton x:Name="ModeToggle"
+                  Width="90"
+                  Height="24"
+                  Margin="12,0,0,0"
+                  Checked="ModeToggle_Checked"
+                  Unchecked="ModeToggle_Unchecked"
+                  IsChecked="False">
+                            <ToggleButton.Resources>
+                                <SolidColorBrush x:Key="AccentBrush" Color="#5C7CFA" />
+                                <SolidColorBrush x:Key="AccentSoftBrush" Color="#3D4FD3" />
+                                <SolidColorBrush x:Key="TextBrush" Color="#F5F5FF" />
+                            </ToggleButton.Resources>
+
+                            <ToggleButton.Template>
+                                <ControlTemplate TargetType="ToggleButton">
+                                    <Border x:Name="Border"
+                        CornerRadius="12"
+                        Background="#202233"
+                        BorderBrush="{StaticResource AccentSoftBrush}"
+                        BorderThickness="1"
+                        Padding="4,0">
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition />
+                                                <ColumnDefinition />
+                                            </Grid.ColumnDefinitions>
+
+                                            <!-- Left: Sequencer label -->
+                                            <TextBlock Text="SEQ"
+                                   Grid.Column="0"
+                                   HorizontalAlignment="Center"
+                                   VerticalAlignment="Center"
+                                   FontSize="11"
+                                   Foreground="{StaticResource TextBrush}"/>
+
+                                            <!-- Right: Synth label -->
+                                            <TextBlock Text="SYNTH"
+                                   Grid.Column="1"
+                                   HorizontalAlignment="Center"
+                                   VerticalAlignment="Center"
+                                   FontSize="11"
+                                   Foreground="{StaticResource TextBrush}"/>
+                                        </Grid>
+                                    </Border>
+
+                                    <ControlTemplate.Triggers>
+                                        <!-- Checked: highlight right side -->
+                                        <Trigger Property="IsChecked" Value="True">
+                                            <Setter TargetName="Border" Property="Background" Value="#3D4FD3" />
+                                        </Trigger>
+
+                                        <!-- Pressed: subtle highlight -->
+                                        <Trigger Property="IsPressed" Value="True">
+                                            <Setter TargetName="Border" Property="Background" Value="#5C7CFA" />
+                                        </Trigger>
+                                    </ControlTemplate.Triggers>
+                                </ControlTemplate>
+                            </ToggleButton.Template>
+                        </ToggleButton>
+                    </StackPanel>
+
                     <TextBlock Text="multi-step drum machine"
                                Foreground="{StaticResource SubtleTextBrush}"
                                FontSize="12" />
                 </StackPanel>
+
+                <ContentControl x:Name="MainContent"
+                    Grid.Row="1"
+                    Margin="8"/>
 
                 <StackPanel Orientation="Horizontal"
             Margin="15,0,0,0"
